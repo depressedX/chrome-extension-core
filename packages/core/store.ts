@@ -1,6 +1,8 @@
 import merge from 'deepmerge';
 import { isObject, objectKeys, pick } from "../utils";
 
+const overwriteMerge = (destinationArray: unknown[], sourceArray: unknown[]) => sourceArray;
+
 export type WatcherCallback<T extends Record<string, unknown>> = (
   changes: Record<keyof T, chrome.storage.StorageChange>,
   areaName?: chrome.storage.AreaName,
@@ -75,7 +77,9 @@ export class ChromeStorage<T extends Record<string, unknown>> {
       this.runTimeApi?.get?.(reallyKey as string | string[], (res) => {
         // The scenario where compatibility with "res" is {} (empty set).
         const reallyRes = this.scope ? res[this.scope] : res;
-        const mergeDefaultRes = merge(this.defaultValue, reallyRes ?? {}) as T;
+        const mergeDefaultRes = merge(this.defaultValue, reallyRes ?? {}, {
+          arrayMerge: overwriteMerge,
+        }) as T;
         if (Array.isArray(key)) resolve(pick<T, Key>(mergeDefaultRes, key));
         resolve(mergeDefaultRes[key as string] as T[Key]);
       });
