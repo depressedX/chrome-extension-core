@@ -60,17 +60,16 @@ export class ChromeEvent<
     this.scope = scope;
     chrome.runtime?.onMessage?.addListener?.(
       (request, sender, sendResponse) => {
-        this.dispatchEvent(request, sendResponse);
-        return true;
+        return this.dispatchEvent(request, sendResponse);
       }
     );
   }
   private dispatchEvent(
     request: EventMessage<keyof Events, Events[keyof Events]>,
     sendResponse: (response?: CallbackResponse) => void
-  ) {
+  ): boolean {
     const { key, data, scope } = request;
-    if (scope && scope !== this.scope) return;
+    if (scope && scope !== this.scope) return false;
     if (this.listeners.has(key)) {
       const handlers = this.listeners.get(key);
       handlers.forEach(
@@ -110,7 +109,9 @@ export class ChromeEvent<
           }
         }
       );
+      return true;
     }
+    return false;
   }
 
   on<Key extends keyof Events>(
